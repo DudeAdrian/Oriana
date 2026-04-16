@@ -1,0 +1,16 @@
+node_modules/
+.env.local
+.env.*.local
+*.log
+.DS_Store
+dist/
+build/
+.expo/
+.expo-shared/
+npm-debug.*
+.project
+.classpath
+.c9/
+*.swp
+*.swo
+*~
