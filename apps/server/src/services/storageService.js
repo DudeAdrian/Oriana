@@ -1,11 +1,17 @@
-const AWS = require('aws-sdk');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command, CopyObjectCommand, CreateMultipartUploadCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { Upload } = require('@aws-sdk/lib-storage');
 const { v4: uuidv4 } = require('uuid');
 
-// Configure AWS SDK
-const s3 = new AWS.S3({
+// Configure AWS SDK v3
+const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'ap-southeast-2',
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  },
+  endpoint: process.env.AWS_ENDPOINT || undefined, // Useful for MinIO
+  forcePathStyle: true
 });
 
 const BUCKET_NAME = process.env.AWS_S3_BUCKET;
@@ -19,25 +25,31 @@ const uploadToS3 = async (file, folder = 'uploads') => {
     const fileExtension = file.originalname.split('.').pop();
     const fileName = `${folder}/${uuidv4()}.${fileExtension}`;
 
-    const params = {
-      Bucket: BUCKET_NAME,
-      Key: fileName,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-      ACL: 'public-read',
-      CacheControl: 'max-age=31536000', // 1 year for immutable content
-      Metadata: {
-        'upload-date': new Date().toISOString(),
-        'original-name': file.originalname
-      }
-    };
+    const parallelUploads3 = new Upload({
+      client: s3Client,
+      params: {
+        Bucket: BUCKET_NAME,
+        Key: fileName,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ACL: 'public-read',
+        CacheControl: 'max-age=31536000',
+        Metadata: {
+          'upload-date': new Date().toISOString(),
+          'original-name': file.originalname
+        }
+      },
+    });
 
-    const result = await s3.upload(params).promise();
+    const result = await parallelUploads3.done();
 
-    // Return CloudFront URL if configured
-    const url = CLOUDFRONT_DOMAIN
-      ? `${CLOUDFRONT_DOMAIN}/${fileName}`
-      : result.Location;
+    // Ensure CloudFront domain has protocol and no trailing slash
+    let url = result.Location || `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    if (CLOUDFRONT_DOMAIN) {
+      const baseCdn = CLOUDFRONT_DOMAIN.startsWith('http') ? CLOUDFRONT_DOMAIN : `https://${CLOUDFRONT_DOMAIN}`;
+      const normalizedCdn = baseCdn.endsWith('/') ? baseCdn.slice(0, -1) : baseCdn;
+      url = `${normalizedCdn}/${fileName}`;
+    }
 
     return {
       s3Key: fileName,
@@ -47,6 +59,7 @@ const uploadToS3 = async (file, folder = 'uploads') => {
       mimeType: file.mimetype
     };
   } catch (error) {
+    console.error('S3 Upload Error:', error);
     throw new Error(`S3 upload failed: ${error.message}`);
   }
 };
@@ -58,14 +71,13 @@ const generatePresignedUrl = async (fileName, mimeType, folder = 'uploads') => {
   try {
     const key = `${folder}/${uuidv4()}.${fileName.split('.').pop()}`;
 
-    const params = {
+    const command = new PutObjectCommand({
       Bucket: BUCKET_NAME,
       Key: key,
       ContentType: mimeType,
-      Expires: 3600 // 1 hour
-    };
+    });
 
-    const presignedUrl = await s3.getSignedUrlPromise('putObject', params);
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
     return {
       presignedUrl,
@@ -82,12 +94,10 @@ const generatePresignedUrl = async (fileName, mimeType, folder = 'uploads') => {
  */
 const deleteFromS3 = async (s3Key) => {
   try {
-    const params = {
+    await s3Client.send(new DeleteObjectCommand({
       Bucket: BUCKET_NAME,
       Key: s3Key
-    };
-
-    await s3.deleteObject(params).promise();
+    }));
     return true;
   } catch (error) {
     throw new Error(`S3 deletion failed: ${error.message}`);
@@ -99,12 +109,10 @@ const deleteFromS3 = async (s3Key) => {
  */
 const getS3ObjectMetadata = async (s3Key) => {
   try {
-    const params = {
+    const metadata = await s3Client.send(new HeadObjectCommand({
       Bucket: BUCKET_NAME,
       Key: s3Key
-    };
-
-    const metadata = await s3.headObject(params).promise();
+    }));
     return {
       size: metadata.ContentLength,
       lastModified: metadata.LastModified,
@@ -121,13 +129,11 @@ const getS3ObjectMetadata = async (s3Key) => {
  */
 const listS3Objects = async (folder, maxKeys = 100) => {
   try {
-    const params = {
+    const result = await s3Client.send(new ListObjectsV2Command({
       Bucket: BUCKET_NAME,
       Prefix: folder,
       MaxKeys: maxKeys
-    };
-
-    const result = await s3.listObjectsV2(params).promise();
+    }));
     return result.Contents || [];
   } catch (error) {
     throw new Error(`S3 listing failed: ${error.message}`);
@@ -139,13 +145,11 @@ const listS3Objects = async (folder, maxKeys = 100) => {
  */
 const copyS3Object = async (sourceKey, destKey, destBucket = null) => {
   try {
-    const params = {
+    await s3Client.send(new CopyObjectCommand({
       Bucket: destBucket || BUCKET_NAME,
       CopySource: `/${BUCKET_NAME}/${sourceKey}`,
       Key: destKey
-    };
-
-    await s3.copyObject(params).promise();
+    }));
     return true;
   } catch (error) {
     throw new Error(`S3 copy failed: ${error.message}`);
@@ -159,16 +163,17 @@ const initiateMultipartUpload = async (fileName) => {
   try {
     const key = `uploads/${uuidv4()}.${fileName.split('.').pop()}`;
 
-    const params = {
+    const result = await s3Client.send(new CreateMultipartUploadCommand({
       Bucket: BUCKET_NAME,
       Key: key
-    };
+    }));
 
-    const result = await s3.createMultipartUpload(params).promise();
+    const baseUrl = CLOUDFRONT_DOMAIN ? `https://${CLOUDFRONT_DOMAIN}` : `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com`;
+    
     return {
       uploadId: result.UploadId,
       s3Key: key,
-      uploadUrl: `${CLOUDFRONT_DOMAIN || s3.endpoint.href}/${key}` 
+      uploadUrl: `${baseUrl}/${key}` 
     };
   } catch (error) {
     throw new Error(`Multipart upload initiation failed: ${error.message}`);

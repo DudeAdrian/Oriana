@@ -1,7 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./db');
 const storageService = require('./storageService');
 const ipfsService = require('./ipfsService');
-const prisma = new PrismaClient();
+const auditService = require('./auditService');
 
 const createVideo = async (userId, data) => {
   try {
@@ -133,6 +133,8 @@ const deleteVideo = async (videoId, userId) => {
 
   await Promise.all(deletePromises);
   await prisma.video.delete({ where: { id: videoId } });
+
+  await auditService.logAction(userId, 'DELETE_VIDEO', 'Video', videoId, { title: video.title });
 };
 
 module.exports = {

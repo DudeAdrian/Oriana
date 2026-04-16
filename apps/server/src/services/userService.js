@@ -1,5 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('./db');
+const searchService = require('./searchService');
+const auditService = require('./auditService');
 
 const getUserProfile = async (userId) => {
   const user = await prisma.user.findUnique({
@@ -32,28 +33,16 @@ const updateProfile = async (userId, data) => {
     }
   });
 
+  // Sync with Elasticsearch for search consistency
+  await searchService.indexUser(user);
+  await auditService.logAction(userId, 'UPDATE_PROFILE', 'User', userId, { fields: Object.keys(data) });
+
   return user;
 };
 
 const searchUsers = async (query) => {
-  const users = await prisma.user.findMany({
-    where: {
-      OR: [
-        { username: { contains: query, mode: 'insensitive' } },
-        { displayName: { contains: query, mode: 'insensitive' } }
-      ]
-    },
-    take: 20,
-    select: {
-      id: true,
-      username: true,
-      displayName: true,
-      profileImage: true,
-      bio: true
-    }
-  });
-
-  return users;
+  // Using Elasticsearch for better performance and relevance
+  return await searchService.searchUsers(query);
 };
 
 const getUserByUsername = async (username) => {

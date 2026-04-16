@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('./db');
+const auditService = require('./auditService');
 
 const createComment = async (userId, videoId, content) => {
   const comment = await prisma.comment.create({
@@ -56,6 +56,8 @@ const deleteComment = async (commentId, userId) => {
   }
 
   await prisma.comment.delete({ where: { id: commentId } });
+
+  await auditService.logAction(userId, 'DELETE_COMMENT', 'Comment', commentId, { videoId: comment.videoId });
 };
 
 module.exports = {

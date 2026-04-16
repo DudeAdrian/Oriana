@@ -1,12 +1,15 @@
-const AWS = require('aws-sdk');
+const { S3Client, ListObjectsV2Command, GetObjectCommand, PutBucketReplicationCommand, PutBucketVersioningCommand } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 
 const BACKUP_BUCKET = process.env.AWS_BACKUP_BUCKET;
 const BACKUP_REGION = process.env.AWS_BACKUP_REGION || 'ap-southeast-2';
 
-const s3Backup = new AWS.S3({
+const s3BackupClient = new S3Client({
   region: BACKUP_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
 });
 
 /**
@@ -42,20 +45,27 @@ const uploadBackupToS3 = async (backupData, backupName) => {
     }
 
     const uploadPromises = regions.map(region => {
-      const params = {
-        Bucket: BACKUP_BUCKET,
-        Key: `backups/${backupName}`,
-        Body: backupData,
-        ServerSideEncryption: 'AES256',
-        StorageClass: 'GLACIER', // Cost-effective for backups
-        Metadata: {
-          'backup-date': new Date().toISOString(),
-          'region': region
+      const client = new S3Client({
+        region,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
         }
-      };
+      });
 
-      const s3Instance = new AWS.S3({ region });
-      return s3Instance.upload(params).promise();
+      const uploader = new Upload({
+        client,
+        params: {
+          Bucket: BACKUP_BUCKET,
+          Key: `backups/${backupName}`,
+          Body: backupData,
+          ServerSideEncryption: 'AES256',
+          StorageClass: 'GLACIER',
+          Metadata: { 'backup-date': new Date().toISOString(), 'region': region }
+        }
+      });
+
+      return uploader.done();
     });
 
     const results = await Promise.all(uploadPromises);
@@ -77,7 +87,7 @@ const uploadBackupToS3 = async (backupData, backupName) => {
  */
 const setupReplication = async (sourceBucket, destBucket, destRegion) => {
   try {
-    const params = {
+    const command = new PutBucketReplicationCommand({
       Bucket: sourceBucket,
       ReplicationConfiguration: {
         Role: process.env.AWS_REPLICATION_ROLE_ARN,
@@ -107,13 +117,17 @@ const setupReplication = async (sourceBucket, destBucket, destRegion) => {
           }
         ]
       }
-    };
-
-    const s3 = new AWS.S3({
-      region: process.env.AWS_REGION || 'ap-southeast-2'
     });
 
-    await s3.putBucketReplication(params).promise();
+    const s3 = new S3Client({
+      region: process.env.AWS_REGION || 'ap-southeast-2',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      }
+    });
+
+    await s3.send(command);
 
     return {
       status: 'configured',
@@ -132,13 +146,11 @@ const setupReplication = async (sourceBucket, destBucket, destRegion) => {
  */
 const listBackups = async (limit = 30) => {
   try {
-    const params = {
+    const result = await s3BackupClient.send(new ListObjectsV2Command({
       Bucket: BACKUP_BUCKET,
       Prefix: 'backups/',
       MaxKeys: limit
-    };
-
-    const result = await s3Backup.listObjectsV2(params).promise();
+    }));
 
     return (result.Contents || []).map(item => ({
       name: item.Key.replace('backups/', ''),
@@ -156,12 +168,10 @@ const listBackups = async (limit = 30) => {
  */
 const restoreFromBackup = async (backupName) => {
   try {
-    const params = {
+    const backup = await s3BackupClient.send(new GetObjectCommand({
       Bucket: BACKUP_BUCKET,
       Key: `backups/${backupName}`
-    };
-
-    const backup = await s3Backup.getObject(params).promise();
+    }));
 
     return {
       backupName,
@@ -179,18 +189,22 @@ const restoreFromBackup = async (backupName) => {
  */
 const enableVersioning = async (bucketName) => {
   try {
-    const params = {
+    const command = new PutBucketVersioningCommand({
       Bucket: bucketName,
       VersioningConfiguration: {
         Status: 'Enabled'
       }
-    };
-
-    const s3 = new AWS.S3({
-      region: process.env.AWS_REGION || 'ap-southeast-2'
     });
 
-    await s3.putBucketVersioning(params).promise();
+    const s3 = new S3Client({
+      region: process.env.AWS_REGION || 'ap-southeast-2',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      }
+    });
+
+    await s3.send(command);
 
     return {
       bucket: bucketName,

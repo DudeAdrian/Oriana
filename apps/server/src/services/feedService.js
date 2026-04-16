@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('./db');
+const cache = require('./cache');
 
 const getFeed = async (userId, skip = 0, take = 10) => {
   // Get videos from users that the current user follows
@@ -34,20 +34,34 @@ const getFeed = async (userId, skip = 0, take = 10) => {
     }
   });
 
-  // Add like status for current user
-  const videosWithLikeStatus = await Promise.all(
-    videos.map(async (video) => {
-      const liked = await prisma.like.findUnique({
-        where: { userId_videoId: { userId, videoId: video.id } }
-      });
-      return { ...video, isLiked: !!liked };
-    })
-  );
+  // Optimization: Fetch all likes for these videos in one query (Avoid N+1)
+  const videoIds = videos.map(v => v.id);
+  const userLikes = await prisma.like.findMany({
+    where: {
+      userId,
+      videoId: { in: videoIds }
+    },
+    select: { videoId: true }
+  });
+
+  const likedVideoIds = new Set(userLikes.map(l => l.videoId));
+  const videosWithLikeStatus = videos.map(video => ({
+    ...video,
+    isLiked: likedVideoIds.has(video.id)
+  }));
 
   return videosWithLikeStatus;
 };
 
 const getDiscoveryFeed = async (skip = 0, take = 10) => {
+  const cacheKey = `feed:discovery:${skip}:${take}`;
+  
+  // Try to get from cache first
+  if (skip === 0) {
+    const cachedFeed = await cache.get(cacheKey);
+    if (cachedFeed) return cachedFeed;
+  }
+
   const videos = await prisma.video.findMany({
     skip,
     take,
@@ -69,6 +83,11 @@ const getDiscoveryFeed = async (skip = 0, take = 10) => {
       }
     }
   });
+
+  // Cache for 5 minutes if it's the first page
+  if (skip === 0) {
+    await cache.set(cacheKey, videos, 300);
+  }
 
   return videos;
 };

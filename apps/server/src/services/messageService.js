@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('./db');
 
 const sendMessage = async (senderId, receiverId, content) => {
   if (senderId === receiverId) {
@@ -51,19 +50,16 @@ const getConversations = async (userId) => {
     ...received.map(m => m.senderId)
   ]);
 
-  const users = await Promise.all(
-    Array.from(userIds).map(id =>
-      prisma.user.findUnique({
-        where: { id },
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
-          profileImage: true
-        }
-      })
-    )
-  );
+  // Optimization: Fetch all conversation users in one query
+  const users = await prisma.user.findMany({
+    where: { id: { in: Array.from(userIds) } },
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      profileImage: true
+    }
+  });
 
   return users;
 };

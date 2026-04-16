@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('./db');
 
 const getNotifications = async (userId, skip = 0, take = 20) => {
   const notifications = await prisma.notification.findMany({
@@ -19,21 +18,23 @@ const getNotifications = async (userId, skip = 0, take = 20) => {
     }
   });
 
-  // Get fromUser details for each notification
-  const notificationsWithFromUser = await Promise.all(
-    notifications.map(async (notif) => {
-      const fromUser = await prisma.user.findUnique({
-        where: { id: notif.fromUserId },
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
-          profileImage: true
-        }
-      });
-      return { ...notif, fromUser };
-    })
-  );
+  // Optimization: Fetch all 'from' users in one query
+  const fromUserIds = [...new Set(notifications.map(n => n.fromUserId))];
+  const fromUsers = await prisma.user.findMany({
+    where: { id: { in: fromUserIds } },
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      profileImage: true
+    }
+  });
+
+  const userMap = new Map(fromUsers.map(u => [u.id, u]));
+  const notificationsWithFromUser = notifications.map(notif => ({
+    ...notif,
+    fromUser: userMap.get(notif.fromUserId) || null
+  }));
 
   return notificationsWithFromUser;
 };
