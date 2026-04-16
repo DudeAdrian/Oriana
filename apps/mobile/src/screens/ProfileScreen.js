@@ -65,17 +65,9 @@ export const ProfileScreen = ({ route, navigation, currentUserId }) => {
     );
   }
 
-  if (!user) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text>User not found</Text>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+  const renderHeader = () => (
+    <View style={styles.headerContainer}>
+      <View style={styles.profileInfo}>
         <Image
           source={{ uri: user.profileImage || 'https://via.placeholder.com/80' }}
           style={styles.avatar}
@@ -115,18 +107,31 @@ export const ProfileScreen = ({ route, navigation, currentUserId }) => {
           </View>
         )}
       </View>
-
       <Text style={styles.videosTitle}>Videos</Text>
+    </View>
+  );
+
+  if (!user) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text>User not found</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
       <FlatList
         data={videos}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={renderHeader}
         renderItem={({ item }) => (
           <VideoCard
             video={item}
             onPress={() => navigation.navigate('VideoDetail', { videoId: item.id })}
           />
         )}
-        scrollEnabled={false}
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
@@ -142,9 +147,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  header: {
+  headerContainer: {
+    backgroundColor: '#fff',
+  },
+  profileInfo: {
     padding: 20,
-    centeritems: 'center',
+    alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#eee'
   },
@@ -217,6 +225,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     paddingLeft: 20,
-    marginTop: 15
+    marginVertical: 15
+  },
+  listContent: {
+    paddingBottom: 20
   }
 });
