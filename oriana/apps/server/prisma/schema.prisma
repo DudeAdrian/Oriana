@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  password      String
+  displayName   String
+  bio           String?
+  profileImage  String?
+  coverImage    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  videos        Video[]
+  comments      Comment[]
+  likes         Like[]
+  followers     Follow[]  @relation("following")
+  following     Follow[]  @relation("follower")
+  notifications Notification[]
+  sentMessages  Message[] @relation("sender")
+  receivedMessages Message[] @relation("receiver")
+
+  @@index([email])
+  @@index([username])
+}
+
+model Video {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title         String
+  description   String?
+  videoUrl      String
+  thumbnailUrl  String?
+  duration      Int       // in seconds
+  
+  // Decentralized storage
+  s3Key         String?            // AWS S3 key
+  ipfsHash      String?            // IPFS content hash
+  storageType   String?            // 'hybrid', 's3', 'ipfs'
+  pinned        Boolean   @default(false)
+  
+  likes         Like[]
+  comments      Comment[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([ipfsHash])
+}
+
+model Comment {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  videoId       String
+  video         Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  
+  content       String
+  likes         Int       @default(0)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([videoId])
+}
+
+model Like {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  videoId       String
+  video         Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@index([videoId])
+}
+
+model Follow {
+  id            String    @id @default(cuid())
+  followerId    String
+  follower      User      @relation("following", fields: [followerId], references: [id], onDelete: Cascade)
+  
+  followingId   String
+  following     User      @relation("follower", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime  @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Notification {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type          String    // 'like', 'comment', 'follow'
+  fromUserId    String
+  content       String?
+  read          Boolean   @default(false)
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Message {
+  id            String    @id @default(cuid())
+  senderId      String
+  sender        User      @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId    String
+  receiver      User      @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  content       String
+  read          Boolean   @default(false)
+  
+  createdAt     DateTime  @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+}
