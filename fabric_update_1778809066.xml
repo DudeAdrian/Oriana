@@ -1,0 +1,45 @@
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<fragment xmlns="http://schemas.android.com/renderdoc">
+  <background>
+    <color>
+      <alpha>1</alpha>
+      <red>0</red>
+      <green>0</green>
+      <blue>0.5</blue>
+    </color>
+  </background>
+  <overlay>
+    <text>
+      <font>ui_default</font>
+      <color>
+        <alpha>1</alpha>
+        <red>1</red>
+        <green>1</green>
+        <blue>0</blue>
+      </color>
+      <align>left</align>
+      <size>24</size>
+    </text>
+  </overlay>
+  <bubble>
+    <fill>
+      <color>
+        <alpha>1</alpha>
+        <red>1</red>
+        <green>1</green>
+        <blue>0</blue>
+      </color>
+    </fill>
+    <etched_color>
+      <color>
+        <alpha>1</alpha>
+        <red>1</red>
+        <green>0.75</green>
+        <blue>0</blue>
+      </color>
+    </etched_color>
+  </bubble>
+</fragment>
+```
+

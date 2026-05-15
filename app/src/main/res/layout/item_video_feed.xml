@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<swarm>
+  <container name="video_container" 
+             width="800px" height="600px"
+             background_color="#032B44"
+             border_width="2px" 
+             border_style="etched" 
+             border_color="#F8E231">
+    <!-- Add your content here -->
+  </container>
+</swarm>
+

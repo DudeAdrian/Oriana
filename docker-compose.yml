@@ -1,0 +1,276 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database - Australia (Sydney) optimized
+  postgres:
+    image: postgres:15-alpine
+    container_name: tiktok-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tiktok-clone
+      POSTGRES_USER: ${DB_USER:-user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - tiktok-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d tiktok-clone"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis Cache - Session management & real-time features
+  redis:
+    image: redis:7-alpine
+    container_name: tiktok-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispass}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - tiktok-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redispass}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # IPFS Node - Decentralized content storage
+  ipfs:
+    image: ipfs/go-ipfs:v0.17.0
+    container_name: tiktok-ipfs
+    restart: unless-stopped
+    ports:
+      - "4001:4001"              # swarm
+      - "4001:4001/udp"          # swarm UDP
+      - "127.0.0.1:8080:8080"    # gateway
+      - "127.0.0.1:5001:5001"    # API
+    volumes:
+      - ipfs_staging:/export
+      - ipfs_data:/data/ipfs
+    environment:
+      LIBP2P_FORCE_PNET: 0
+    networks:
+      - tiktok-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MinIO - S3-compatible object storage (development)
+  minio:
+    image: minio/minio:latest
+    container_name: tiktok-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"         # S3 API
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"    # Console UI
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minioadmin123}
+    volumes:
+      - minio_data:/data
+    networks:
+      - tiktok-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Node.js Backend Server
+  server:
+    build:
+      context: ./apps/server
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV:-development}
+    container_name: tiktok-server
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-5000}:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      # Application
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 5000
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-key-change-in-production}
+      
+      # Database
+      DATABASE_URL: postgresql://${DB_USER:-user}:${DB_PASSWORD:-password}@postgres:5432/tiktok-clone
+      
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redispass}@redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispass}
+      
+      # IPFS
+      IPFS_API_URL: http://ipfs:5001
+      IPFS_GATEWAY: http://ipfs:8080
+      IPFS_NODE: ipfs
+      
+      # S3 / MinIO (Local)
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${MINIO_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_PASSWORD:-minioadmin123}
+      S3_BUCKET: ${S3_BUCKET:-tiktok-content}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      
+      # AWS (Production - if needed)
+      AWS_REGION: ${AWS_REGION:-ap-southeast-2}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      
+      # Pinata (IPFS Pinning Service)
+      PINATA_API_KEY: ${PINATA_API_KEY:-}
+      PINATA_SECRET_KEY: ${PINATA_SECRET_KEY:-}
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    volumes:
+      - ./apps/server/src:/app/src
+      - ./apps/server/prisma:/app/prisma
+      - /app/node_modules
+    networks:
+      - tiktok-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # Nginx Reverse Proxy / API Gateway
+  nginx:
+    image: nginx:alpine
+    container_name: tiktok-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx
+    depends_on:
+      - server
+      - minio
+    networks:
+      - tiktok-net
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Monitoring - Prometheus (optional, for production)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tiktok-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - tiktok-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Logging - ELK Stack (Elasticsearch - optional)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.0
+    container_name: tiktok-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - tiktok-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ipfs_staging:
+    driver: local
+  ipfs_data:
+    driver: local
+  minio_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  nginx_cache:
+    driver: local
+
+networks:
+  tiktok-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

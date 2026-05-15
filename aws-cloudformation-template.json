@@ -1,0 +1,175 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "TikTok Clone Infrastructure - Australia Primary Region",
+  "Parameters": {
+    "Environment": {
+      "Type": "String",
+      "Default": "production",
+      "AllowedValues": ["development", "staging", "production"]
+    },
+    "DBPassword": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "RDS Database Password"
+    }
+  },
+  "Resources": {
+    "TikTokCloneVPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "Tags": [{"Key": "Name", "Value": "tiktok-clone-vpc"}]
+      }
+    },
+    "PublicSubnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {"Ref": "TikTokCloneVPC"},
+        "CidrBlock": "10.0.1.0/24",
+        "AvailabilityZone": "ap-southeast-2a",
+        "MapPublicIpOnLaunch": true
+      }
+    },
+    "PublicSubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {"Ref": "TikTokCloneVPC"},
+        "CidrBlock": "10.0.2.0/24",
+        "AvailabilityZone": "ap-southeast-2b",
+        "MapPublicIpOnLaunch": true
+      }
+    },
+    "RDSSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for RDS",
+        "VpcId": {"Ref": "TikTokCloneVPC"},
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 5432,
+            "ToPort": 5432,
+            "CidrIp": "10.0.0.0/16"
+          }
+        ]
+      }
+    },
+    "TikTokCloneRDS": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "Engine": "postgres",
+        "EngineVersion": "15.2",
+        "DBInstanceClass": "db.t3.micro",
+        "AllocatedStorage": "50",
+        "StorageType": "gp3",
+        "StorageEncrypted": true,
+        "DBName": "tiktok_clone",
+        "MasterUsername": "postgres",
+        "MasterUserPassword": {"Ref": "DBPassword"},
+        "VPCSecurityGroups": [{"Ref": "RDSSecurityGroup"}],
+        "DBSubnetGroupName": "default",
+        "BackupRetentionPeriod": 30,
+        "PreferredBackupWindow": "03:00-04:00",
+        "PreferredMaintenanceWindow": "mon:04:00-mon:05:00",
+        "EnableIAMDatabaseAuthentication": true,
+        "EnableCloudwatchLogsExports": ["postgresql"],
+        "Tags": [{"Key": "Name", "Value": "tiktok-clone-db"}]
+      }
+    },
+    "S3ContentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "tiktok-clone-content-au",
+        "VersioningConfiguration": {"Status": "Enabled"},
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        },
+        "Tags": [{"Key": "Name", "Value": "tiktok-content"}]
+      }
+    },
+    "S3BackupBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "tiktok-clone-backups-au",
+        "VersioningConfiguration": {"Status": "Enabled"},
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "TransitionToGlacier",
+              "Status": "Enabled",
+              "Transitions": [
+                {
+                  "TransitionInDays": 30,
+                  "StorageClass": "GLACIER"
+                }
+              ]
+            }
+          ]
+        },
+        "Tags": [{"Key": "Name", "Value": "tiktok-backups"}]
+      }
+    },
+    "CloudFrontDistribution": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "DefaultCacheBehavior": {
+            "AllowedMethods": ["GET", "HEAD"],
+            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+            "TargetOriginId": "S3Origin",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          "Enabled": true,
+          "Origins": [
+            {
+              "DomainName": {"Fn::GetAtt": ["S3ContentBucket", "DomainName"]},
+              "Id": "S3Origin",
+              "S3OriginConfig": {}
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "RDSEndpoint": {
+      "Value": {"Fn::GetAtt": ["TikTokCloneRDS", "Endpoint.Address"]},
+      "Description": "RDS Database Endpoint"
+    },
+    "S3ContentBucketName": {
+      "Value": {"Ref": "S3ContentBucket"},
+      "Description": "S3 Content Bucket"
+    },
+    "S3BackupBucketName": {
+      "Value": {"Ref": "S3BackupBucket"},
+      "Description": "S3 Backup Bucket"
+    },
+    "CloudFrontDomain": {
+      "Value": {"Fn::GetAtt": ["CloudFrontDistribution", "DomainName"]},
+      "Description": "CloudFront Distribution Domain"
+    }
+  }
+}

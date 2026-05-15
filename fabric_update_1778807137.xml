@@ -1,0 +1,18 @@
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<item>
+  <title>Video Feed</title>
+  <link>http://example.com/video-feed</link>
+  <description>Watch our latest video content.</description>
+  <media:category>Entertainment</media:category>
+  <media:credit>John Doe</media:credit>
+  <media:thumbnail url="https://example.com/image.jpg" width="140" height="[8D[K
+height="140"/>
+  <media:content type="video/x-flv" expression=""-length" content-length="1[17D[K
+content-length="1000000" url="https://example.com/video.flv"/>
+  <swarm:container background-color="#032B44">
+    <swarm:border color="#F8E231" width="5" style="etched"/>
+  </swarm:container>
+</item>
+```
+
