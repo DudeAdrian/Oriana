@@ -1,35 +1,49 @@
-{
-  "name": "tiktok-clone-server",
-  "version": "1.0.0",
-  "description": "TikTok clone backend API",
-  "main": "src/index.js",
-  "scripts": {
-    "dev": "npx nodemon src/index.js",
-    "start": "node src/index.js",
-    "build": "echo 'Build complete'",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
-  },
-  "keywords": ["api", "express", "prisma"],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "@prisma/client": "^5.0.0",
-    "aws-sdk": "^2.1400.0",
-    "axios": "^1.4.0",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2",
-    "ipfs-http-client": "^59.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "multer": "^1.4.5-lts.1",
-    "stripe": "^12.0.0",
-    "uuid": "^9.0.0"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.22",
-    "prisma": "^5.0.0"
-  }
+﻿{
+    "name":  "tiktok-clone-server",
+    "version":  "1.0.0",
+    "description":  "TikTok clone backend API",
+    "main":  "src/index.js",
+    "scripts":  {
+                    "dev":  "npx nodemon src/index.js",
+                    "start":  "node src/index.js",
+                    "build":  "echo \u0027Build complete\u0027",
+                    "prisma:generate":  "prisma generate",
+                    "prisma:migrate":  "prisma migrate dev",
+                    "prisma:studio":  "prisma studio"
+                },
+    "keywords":  [
+                     "api",
+                     "express",
+                     "prisma"
+                 ],
+    "author":  "",
+    "license":  "MIT",
+    "dependencies":  {
+                         "@prisma/client":  "^5.0.0",
+                         "aws-sdk":  "^2.1400.0",
+                         "axios":  "^1.4.0",
+                         "bcryptjs":  "^2.4.3",
+                         "cors":  "^2.8.5",
+                         "dotenv":  "^16.0.3",
+                         "express":  "^4.18.2",
+                         "ipfs-http-client":  "^59.0.0",
+                         "jsonwebtoken":  "^9.0.0",
+                         "multer":  "^1.4.5-lts.1",
+                         "stripe":  "^12.0.0",
+                         "uuid":  "^9.0.0"
+                     },
+    "devDependencies":  {
+                            "nodemon":  "^2.0.22",
+                            "prisma":  "^5.0.0"
+                        },
+    "overrides":  {
+                      "semver":  "\u003e=7.5.4",
+                      "serialize-javascript":  "\u003e=7.0.5",
+                      "send":  "\u003e=0.19.0",
+                      "postcss":  "\u003e=8.5.10",
+                      "@xmldom/xmldom":  "\u003e=0.8.12",
+                      "fast-xml-parser":  "\u003e=5.7.0",
+                      "multer":  "\u003e=1.4.5-lts.7",
+                      "tar":  "\u003e=7.5.11"
+                  }
 }

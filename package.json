@@ -1,20 +1,36 @@
 {
-  "name": "tiktok-clone",
-  "version": "1.0.0",
-  "description": "Full-featured TikTok clone",
-  "private": true,
-  "workspaces": [
-    "apps/mobile",
-    "apps/server"
-  ],
-  "scripts": {
-    "dev:server": "cd apps/server && npm run dev",
-    "dev:mobile": "cd apps/mobile && npm start",
-    "build:server": "cd apps/server && npm run build",
-    "build:mobile": "cd apps/mobile && npm run build",
-    "install:all": "npm install && npm install -w apps/server && npm install -w apps/mobile"
-  },
-  "keywords": ["tiktok", "social-media", "video", "entertainment"],
-  "author": "",
-  "license": "MIT"
+    "name":  "oriana-workspace",
+    "version":  "1.0.0",
+    "description":  "Oriana Ecosystem - High-Density Secure Communication Architecture",
+    "private":  true,
+    "workspaces":  [
+                       "apps/mobile",
+                       "apps/server"
+                   ],
+    "scripts":  {
+                    "dev:server":  "cd apps/server \u0026\u0026 npm run dev",
+                    "dev:mobile":  "cd apps/mobile \u0026\u0026 npm start",
+                    "build:server":  "cd apps/server \u0026\u0026 npm run build",
+                    "build:mobile":  "cd apps/mobile \u0026\u0026 npm run build",
+                    "install:all":  "npm install \u0026\u0026 npm install -w apps/server \u0026\u0026 npm install -w apps/mobile"
+                },
+    "keywords":  [
+                     "oriana",
+                     "secure",
+                     "messaging",
+                     "privacy"
+                 ],
+    "author":  "",
+    "license":  "MIT",
+    "overrides":  {
+                      "@xmldom/xmldom":  "\u003e=0.8.12",
+                      "fast-xml-parser":  "\u003e=5.7.0",
+                      "postcss":  "\u003e=8.5.10",
+                      "semver":  "\u003e=7.5.4",
+                      "send":  "\u003e=0.19.0",
+                      "serialize-javascript":  "\u003e=7.0.5",
+                      "tar":  "\u003e=7.5.11",
+                      "webpack-dev-server":  "\u003e=5.2.1",
+                      "multer":  "\u003e=1.4.5-lts.7"
+                  }
 }
