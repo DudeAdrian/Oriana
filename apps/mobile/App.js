@@ -1,510 +1,425 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { AppRegistry } from 'react-native';
 
 const REAL_VIDEOS = [
   { id: '1', creator: '@oriana_peace', title: 'Letting Go Meditation', desc: 'Sovereign conscious frequency mapping and deep letting go audio stream.', tags: '#peace #meditation #oriana', likes: 12400, comments: 842, streamUrl: 'https://assets.mixkit.co/videos/preview/mixkit-beautiful-aerial-view-of-a-forest-and-a-river-41857-large.mp4' },
-  { id: '2', creator: '@squat_verse', title: 'Squatchverse LOVE Meditation', desc: 'Calibrating system love parameters across localized community energy fields.', tags: '#love #squatverse #conscious', likes: 45100, comments: 2100, streamUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-crashing-on-rocks-from-above-41551-large.mp4' },
-  { id: '3', creator: '@inner_peace', title: 'Squatch Inner Peace Session', desc: 'Processing truth-verified meditation metrics to achieve stable internal states.', tags: '#innerpeace #balance #ledger', likes: 9800, comments: 431, streamUrl: 'https://assets.mixkit.co/videos/preview/mixkit-clouds-and-sun-rays-4861-large.mp4' }
+  { id: '2', creator: '@squat_verse', title: 'Squatchverse LOVE Meditation', desc: 'Calibrating system love parameters across localized community energy fields.', tags: '#love #squatverse #conscious', likes: 45100, comments: 2100, streamUrl: 'https://assets.mixkit.co/videos/preview/mixkit-waves-crashing-on-rocks-from-above-41551-large.mp4' }
 ];
 
 if (typeof window !== 'undefined') {
   const style = document.createElement('style');
   style.type = 'text/css';
   style.innerHTML = `
-    .svg-node-wrapper { display: flex !important; align-items: center !important; justify-content: center !important; width: 26px !important; height: 26px !important; }
-    .oriana-video-frame { width: 100%; height: 100%; object-fit: cover; border: none; position: absolute; top: 0; left: 0; z-index: 5; background-color: #070E22; }
+    .svg-node-wrapper { display: flex !important; align-items: center !important; justify-content: center !important; width: 24px !important; height: 24px !important; }
+    .oriana-video-frame { width: 100%; height: 100%; object-fit: cover; border: none; position: absolute; top: 0; left: 0; z-index: 5; background-color: #060B1A; }
+    .merchant-brand-logo-frame { width: 44px; height: 44px; border-radius: 22px; object-fit: cover; border: 1px solid #D4AF37; margin-right: 10px; background-color: #0A1128; }
+    .product-thumbnail-frame { width: 54px; height: 54px; border-radius: 6px; object-fit: cover; border: 0.5px solid rgba(212, 175, 55, 0.3); background-color: #060B1A; }
   `;
   document.head.appendChild(style);
 }
 
-// Custom High-Fidelity SVG Visual Assets
-const SunIcon = ({ color = "#D4AF37" }) => (
-  <div className="svg-node-wrapper"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><circle cx="12" cy="12" r="5" fill={color}/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 18.36l1.42-1.42M18.36 4.22l1.42-1.42"/></svg></div>
-);
-const MsgBubbleIcon = ({ color = "#D4AF37" }) => (
-  <div className="svg-node-wrapper"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" fill={color}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-);
-const VaultIcon = ({ color = "#D4AF37" }) => (
-  <div className="svg-node-wrapper"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" fill={color === "#060B1A" ? "#060B1A" : "none"}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><circle cx="12" cy="12" r="2" fill={color}/></svg></div>
-);
-const AntennaIcon = ({ color = "#D4AF37" }) => (
-  <div className="svg-node-wrapper"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"/><circle cx="12" cy="18" r="1" fill={color}/><path d="M12 14v3"/></svg></div>
+// Vector Assets
+const SunIcon = () => (<View style={st.iconSvgFix}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2.5"><circle cx="12" cy="12" r="5" fill="#D4AF37"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 18.36l1.42-1.42M18.36 4.22l1.42-1.42"/></svg></View>);
+const MsgBubbleIcon = () => (<View style={st.iconSvgFix}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2.5" fill="#D4AF37"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></View>);
+const VaultIcon = () => (<View style={st.iconSvgFix}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><circle cx="12" cy="12" r="2" fill="#D4AF37"/></svg></View>);
+const AntennaIcon = () => (<View style={st.iconSvgFix}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2.5"><path d="M12 2a10 10 0 0 1 10 10M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"/><circle cx="12" cy="18" r="1" fill="#D4AF37"/><path d="M12 14v3"/></svg></View>);
+const HiveTriangularCluster = ({ color }) => (<View style={st.iconSvgFix}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M12 2l4 2.3v4.6l-4 2.3-4-2.3V4.3L12 2z" fill={color}/><path d="M6 11.5l4 2.3v4.6l-4 2.3-4-2.3v-4.6l4-2.3z" fill={color}/><path d="M18 11.5l4 2.3v4.6l-4 2.3-4-2.3v-4.6l4-2.3z" fill={color}/></svg></View>);
+
+const TrueHollowBeeIcon = ({ color }) => (
+  <View style={st.iconSvgFix}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="4" r="1.5" fill={color} /><path d="M10 2.5c-.5-.8-1.2-1-1.2-1M14 2.5c.5-.8 1.2-1 1.2-1" />
+      <path d="M12 5.5c1.8 0 2.5 1.5 2.5 3s-.7 3.5-2.5 3.5-2.5-2-2.5-3.5.7-3.5 2.5-3.5z" fill={color === "#D4AF37" ? color : "none"} />
+      <path d="M9.5 7.5C7 6 3.5 6 2.5 7.5S4 11 7.5 10c2-.5 2-1.5 2-2.5z" fill={color === "#D4AF37" ? "rgba(212, 175, 55, 0.2)" : "none"} />
+      <path d="M14.5 7.5c2.5-1.5 6-1.5 7 0s-1.5 3.5-5 2.5c-2-.5-2-1.5-2-2.5z" fill={color === "#D4AF37" ? "rgba(212, 175, 55, 0.2)" : "none"} />
+      <path d="M12 12c2 0 3 2 3 4.5S13.5 21 12 22.5c-1.5-1.5-3-3.5-3-6s1-4.5 3-4.5z" /><path d="M9.5 15h5M9.2 17.5h5.6M10 20h4" />
+    </svg>
+  </View>
 );
 
-// Navigation Tray High-Fidelity SVG Vectors
-const HiveTriangularCluster = ({ color = "#D4AF37" }) => (
-  <div className="svg-node-wrapper"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M12 2l4 2.3v4.6l-4 2.3-4-2.3V4.3L12 2z" fill={color}/><path d="M6 11.5l4 2.3v4.6l-4 2.3-4-2.3v-4.6l4-2.3z" fill={color}/><path d="M18 11.5l4 2.3v4.6l-4 2.3-4-2.3v-4.6l4-2.3z" fill={color}/></svg></div>
-);
-const SharpBeeIcon = ({ color = "#7E8FA7" }) => (
-  <div className="svg-node-wrapper"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><circle cx="12" cy="12" r="4" fill={color === "#D4AF37" ? "#D4AF37" : "none"}/><path d="M12 8c-2-1.5-4-1.5-4 1s2 2.5 4 2.5M12 8c2-1.5 4-1.5 4 1s-2 2.5-4 2.5M12 16c-2 1.5-4 1.5-4-1s2-2.5 4-2.5M12 16c2 1.5 4 1.5 4-1s-2-2.5-4-2.5M12 4V2M10 2h4"/></svg></div>
-);
-const MessengerInboxIcon = ({ color = "#7E8FA7" }) => (
-  <div className="svg-node-wrapper"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" fill={color === "#D4AF37" ? "#D4AF37" : "none"}><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
-);
-const NativeProfileIcon = ({ color = "#7E8FA7" }) => (
-  <div className="svg-node-wrapper"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4" fill={color === "#D4AF37" ? "#D4AF37" : "none"}/></svg></div>
-);
+const PlusIcon = () => (<View style={st.iconSvgFix}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#060B1A" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></View>);
+const MessengerInboxIcon = ({ color }) => (<View style={st.iconSvgFix}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></View>);
+const NativeProfileIcon = ({ color }) => (<View style={st.iconSvgFix}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4" fill={color === "#D4AF37" ? "#D4AF37" : "none"}/></svg></View>);
 
 function ClockwiseMarqueeCanvas() {
   const canvasRef = useRef(null);
-
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    
-    const W = 420;
-    const H = 840;
-    const padding = 12;
-
-    const pipeline = [
-      { type: 'invader', color: '#D4AF37' },
-      { type: 'text', text: ' ORIANA SOVEREIGN ECOSYSTEM ' },
-      { type: 'invader', color: '#00F0FF' },
-      { type: 'text', text: ' TERRACARE LEDGER SECURED ' },
-      { type: 'invader', color: '#39FF14' },
-      { type: 'text', text: ' ACCESS THE NEW GOLDEN HOUR ' },
-      { type: 'invader', color: '#FF073A' },
-      { type: 'text', text: ' HOLLOW HIVE NETWORKS ACTIVE ' }
-    ];
-
-    let motionOffset = 0;
-    let frameId;
-
+    const W = 420; const H = 840; const padding = 12;
+    const pipeline = [{ type: 'text', text: ' ORIANA SOVEREIGN ECOSYSTEM ' }, { type: 'text', text: ' TERRACARE LEDGER SECURED ' }];
+    let motionOffset = 0; let frameId;
     ctx.font = 'bold 11px Arial, sans-serif';
-    const trackItems = pipeline.map(p => {
-      if (p.type === 'invader') return { ...p, size: 16 };
-      return { ...p, size: ctx.measureText(p.text).width };
-    });
-    
     const perimeterTotal = (W - padding * 2) * 2 + (H - padding * 2) * 2;
-
     const calculate2DPosition = (pos) => {
       let current = (pos % perimeterTotal + perimeterTotal) % perimeterTotal;
-
-      if (current < (W - padding * 2)) {
-        return { x: padding + current, y: padding, angle: 0 };
-      }
+      if (current < (W - padding * 2)) return { x: padding + current, y: padding, angle: 0 };
       current -= (W - padding * 2);
-
-      if (current < (H - padding * 2)) {
-        return { x: W - padding, y: padding + current, angle: Math.PI / 2 };
-      }
+      if (current < (H - padding * 2)) return { x: W - padding, y: padding + current, angle: Math.PI / 2 };
       current -= (H - padding * 2);
-
-      if (current < (W - padding * 2)) {
-        return { x: (W - padding) - current, y: H - padding, angle: Math.PI };
-      }
+      if (current < (W - padding * 2)) return { x: (W - padding) - current, y: H - padding, angle: Math.PI };
       current -= (W - padding * 2);
-
       return { x: padding, y: (H - padding) - current, angle: -Math.PI / 2 };
     };
-
     const drawTick = () => {
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = '#D4AF37';
-      ctx.fillRect(0, 0, W, H);
-
+      ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#D4AF37'; ctx.fillRect(0, 0, W, H);
       let stepPointer = motionOffset;
-
-      for (let pass = 0; pass < 4; pass++) {
-        trackItems.forEach((node) => {
+      for (let pass = 0; pass < 2; pass++) {
+        pipeline.forEach((node) => {
           const coord = calculate2DPosition(stepPointer);
-          
-          ctx.save();
-          ctx.translate(coord.x, coord.y);
-          ctx.rotate(coord.angle);
-          
-          if (node.type === 'invader') {
-            ctx.fillStyle = node.color;
-            ctx.font = '14px Arial';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('??', -8, 0);
-          } else {
-            ctx.fillStyle = '#060B1A';
-            ctx.font = 'bold 11px Arial, sans-serif';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(node.text, 0, 0);
-          }
-          ctx.restore();
-          
-          stepPointer += node.size + 24;
+          ctx.save(); ctx.translate(coord.x, coord.y); ctx.rotate(coord.angle);
+          ctx.fillStyle = '#060B1A'; ctx.fillText(node.text, 0, 0);
+          ctx.restore(); stepPointer += 240;
         });
       }
-
-      motionOffset += 1.2; 
-      frameId = requestAnimationFrame(drawTick);
+      motionOffset += 1.2; frameId = requestAnimationFrame(drawTick);
     };
-
-    drawTick();
-    return () => cancelAnimationFrame(frameId);
+    drawTick(); return () => cancelAnimationFrame(frameId);
   }, []);
-
   return <canvas ref={canvasRef} width={420} height={840} style={{ position: 'absolute', top: 0, left: 0, width: '420px', height: '840px', pointerEvents: 'none' }} />;
 }
 
 export default function App() {
-  const [splash, setSplash] = useState(true);
-  const [phase, setPhase] = useState('AURORA');
-  const [idx, setIdx] = useState(0);
-  
-  const [isIlluminated, setIsIlluminated] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [subFeed, setSubFeed] = useState('FOR_YOU'); 
+  const [currentTab, setCurrentTab] = useState('HIVE');
   const [hudMessage, setHudMessage] = useState(null);
-  const [currentTab, setCurrentTab] = useState('PROFILE');
-  
-  const [username, setUsername] = useState('sovereign');
-  const [legalName, setLegalName] = useState('Adrian Sortino');
-  const [postalAddress, setPostalAddress] = useState('Victoria, Australia');
-  const [bioText, setBioText] = useState('Peace Architect // Conscious conversations within the Hollow Hive logic framework.');
-  
-  const cellTokenId = 'CELL-NFT #1,000,000 / 1';
-  const networkDomain = 'Hollow_Hive_Mainnet';
 
-  const [commentsList, setCommentsList] = useState({ 1: [], 2: [], 3: [] });
-  const [commentInput, setCommentInput] = useState('');
+  // AR Overlay State
+  const [arModalActive, setArModalActive] = useState(false);
+  const [totalWalletPoints, setTotalWalletPoints] = useState(0);
+  const [faunaTasksList, setFaunaTasksList] = useState([
+    { id: 't1', animal: 'Kookaburra', points: 150, tagged: false },
+    { id: 't2', animal: 'Wombat', points: 250, tagged: false },
+    { id: 't3', animal: 'Platypus', points: 400, tagged: false }
+  ]);
+
+  // Marketplace State
+  const [marketTabContext, setMarketTabContext] = useState('EXPLORE'); 
+  const [shopFormName, setShopFormName] = useState('');
+  const [shopFormDetails, setShopFormDetails] = useState('');
+  const [shopFormLogoUrl, setShopFormLogoUrl] = useState('');
   
-  const videoRef = useRef(null);
+  const [prodFormName, setProdFormName] = useState('');
+  const [prodFormPriceAud, setProdFormPriceAud] = useState('');
+  const [prodFormImgUrl, setProdFormImgUrl] = useState('');
+  const [selectedMerchantShop, setSelectedMerchantShop] = useState(null);
 
-  useEffect(() => {
-    setPhase('SOL');
-    const t1 = setTimeout(() => setPhase('READY'), 600);
-    const t2 = setTimeout(() => setSplash(false), 1200);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.load();
+  const [marketplaceServices, setMarketplaceServices] = useState([
+    { 
+      id: 's1', provider: '@oriana_peace', shopName: 'Oriana Resonance Systems', 
+      logoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+      details: 'Acoustic alignment setups.', products: [{ name: 'Resonant Sound Bowl Pack', priceAud: '240.00', imgUrl: 'https://images.unsplash.com/photo-1617791160505-6f006e121980?w=150' }]
+    },
+    { 
+      id: 's2', provider: '@squat_verse', shopName: 'Community Energy Calibration', 
+      logoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150',
+      details: 'P2P alignment sets for regional cells.', products: [{ name: 'Sovereign Node Router Kit', priceAud: '700.00', imgUrl: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=150' }]
     }
-    setIsIlluminated(false);
-    setIsSaved(false);
-    setShowComments(false);
-  }, [idx]);
-
-  const currentTrack = REAL_VIDEOS[idx];
+  ]);
 
   const triggerNotification = (msg) => {
-    setHudMessage(msg);
-    setTimeout(() => setHudMessage(null), 3000);
+    setHudMessage(msg); setTimeout(() => setHudMessage(null), 3000);
   };
 
-  const submitComment = () => {
-    if (!commentInput.trim()) return;
-    setCommentsList(p => ({
-      ...p,
-      [currentTrack.id]: [...p[currentTrack.id], { id: Date.now().toString(), text: commentInput }]
+  const executeSaleWithFee = (productName, price) => {
+    const gross = parseFloat(price);
+    const calculatedFee = (gross * 0.06).toFixed(2);
+    triggerNotification(`?? SALE SECURED: $${gross} AUD | Platform Fee (6%): $${calculatedFee} AUD`);
+  };
+
+  const handleFaunaTag = (id, animal, pts) => {
+    setFaunaTasksList(prev => prev.map(t => {
+      if (t.id === id && !t.tagged) {
+        setTotalWalletPoints(c => c + pts);
+        triggerNotification(`?? AR TAG COMPLETE: ${animal} (+${pts} pts)`);
+        return { ...t, tagged: true };
+      }
+      return t;
     }));
-    setCommentInput('');
-    triggerNotification("?? COMMENT APPENDED TO LEDGER");
   };
-
-  if (splash) {
-    return (
-      <View style={st.splash}>
-        <StatusBar barStyle="light-content" />
-        <View style={st.sunWrap}><View style={st.sun} /></View>
-        <View style={st.brand}>
-          <Text style={st.h1}>ORIANA</Text>
-          <Text style={st.sub}>A NEW GOLDEN DAY ARCHITECTURE</Text>
-          <View style={st.badge}>
-            <Text style={st.badgeTxt}>
-              {phase === 'AURORA' ? 'Incipiens Aurora...' : phase === 'SOL' ? 'Sol Oritur...' : 'Systema Paratum.'}
-            </Text>
-          </View>
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View style={st.outerCanvas}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      
       <View style={st.deviceDisplay}>
-        
-        <View style={st.unifiedGoldFrameOverlay}>
-          <ClockwiseMarqueeCanvas />
-        </View>
+        <View style={st.unifiedGoldFrameOverlay}><ClockwiseMarqueeCanvas /></View>
 
         <View style={st.innerContentSpace}>
+          
+          {/* Top Navbar Header */}
           <View style={st.header}>
-            <Text style={st.tabIn}>Following</Text>
-            <Text style={st.tabAct}>For You</Text>
+            <TouchableOpacity style={st.arOverlayTriggerTextBtn} onPress={() => setArModalActive(true)}>
+              <Text style={st.arBtnInlineTxt}>AR</Text>
+            </TouchableOpacity>
+            <View style={st.centerTabsWrapperFrame}>
+              <TouchableOpacity onPress={() => { setCurrentTab('HIVE'); setSubFeed('FOLLOWING'); }} style={st.headerTabTouch}><Text style={(currentTab === 'HIVE' && subFeed === 'FOLLOWING') ? st.tabAct : st.tabIn}>Following</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => { setCurrentTab('HIVE'); setSubFeed('FOR_YOU'); }} style={st.headerTabTouch}><Text style={(currentTab === 'HIVE' && subFeed === 'FOR_YOU') ? st.tabAct : st.tabIn}>For You</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => { setCurrentTab('HIVE'); setSubFeed('MARKET'); }} style={st.headerTabTouch}><Text style={(currentTab === 'HIVE' && subFeed === 'MARKET') ? st.tabAct : st.tabIn}>Market</Text></TouchableOpacity>
+            </View>
           </View>
 
+          {/* Core Visual Windows */}
           <View style={{ flex: 1, position: 'relative' }}>
-            
-            {/* Core Feed Screen */}
             {currentTab === 'HIVE' && (
               <View style={StyleSheet.absoluteFill}>
-                <View style={st.mediaContainer}>
-                  <video 
-                    ref={videoRef}
-                    className="oriana-video-frame"
-                    src={currentTrack.streamUrl}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                  />
-                  
-                  <View style={st.videoOverlayNavGate}>
-                    <TouchableOpacity style={st.nextBtn} onPress={() => setIdx((p) => (p + 1) % REAL_VIDEOS.length)}>
-                      <Text style={st.nextTxt}>?? SWIPE UP / NEXT MEDITATION</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {showComments && (
-                    <View style={st.commentsOverlayTray}>
-                      <View style={st.commentHeaderRow}>
-                        <Text style={st.commentTitleText}>Ledger Comments ({commentsList[currentTrack.id].length + currentTrack.comments})</Text>
-                        <TouchableOpacity onPress={() => setShowComments(false)} style={st.closeTrayBtn}><Text style={{color: '#D4AF37', fontSize: 11, fontWeight: '800'}}>?</Text></TouchableOpacity>
-                      </View>
-                      <ScrollView style={st.commentsScrollDeck}>
-                        <Text style={st.fallbackComment}>@system_witness: Metadata block origin verified successfully.</Text>
-                        {commentsList[currentTrack.id].map(c => (
-                          <Text key={c.id} style={st.userCommentText}><Text style={{color: '#D4AF37'}}>@anonymous: </Text>{c.text}</Text>
-                        ))}
-                      </ScrollView>
-                      <View style={st.commentInputRow}>
-                        <TextInput 
-                          style={st.hudInputField} 
-                          value={commentInput} 
-                          onChangeText={setCommentInput} 
-                          placeholder="Write encrypted block data..." 
-                          placeholderTextColor="rgba(255,255,255,0.3)" 
-                        />
-                        <TouchableOpacity style={st.sendCommentBtn} onPress={submitComment}><Text style={{color: '#060B1A', fontWeight: '800', fontSize: 11}}>POST</Text></TouchableOpacity>
-                      </View>
+                {subFeed === 'FOR_YOU' && (
+                  <View style={StyleSheet.absoluteFill}>
+                    <video className="oriana-video-frame" src={REAL_VIDEOS[0].streamUrl} autoPlay loop muted playsInline />
+                    <View style={st.leftActionsRail}>
+                      <TouchableOpacity style={st.actBtn} onPress={() => triggerNotification("?? SUN ECOSYSTEM ILLUMINATED")}><SunIcon /></TouchableOpacity>
+                      <TouchableOpacity style={st.actBtn} onPress={() => triggerNotification("?? CHAT FEED ACCESSED")}><MsgBubbleIcon /></TouchableOpacity>
+                      <TouchableOpacity style={st.actBtn} onPress={() => triggerNotification("??? INDEXED TO SECURE VAULT")}><VaultIcon /></TouchableOpacity>
+                      <TouchableOpacity style={st.actBtn} onPress={() => triggerNotification("?? PEER DISTRIBUTED P2P HANDSHAKE")}><AntennaIcon /></TouchableOpacity>
                     </View>
-                  )}
-
-                  {hudMessage && (
-                    <View style={st.witnessHudOverlay}>
-                      <Text style={st.hudTitle}>{hudMessage}</Text>
+                    <View style={st.metaDataDeck}>
+                      <Text style={st.handleTxt}>{REAL_VIDEOS[0].creator}</Text>
+                      <Text style={st.bodyTxt}>{REAL_VIDEOS[0].title}</Text>
                     </View>
-                  )}
-                </View>
-
-                <View style={st.leftActionsRail}>
-                  <TouchableOpacity style={st.actBtn} onPress={() => { setIsIlluminated(!isIlluminated); triggerNotification(isIlluminated ? "?? SUN FREQUENCY MODULATED" : "?? SUN ECOSYSTEM ILLUMINATED"); }}>
-                    <View style={[st.iconContainer, isIlluminated && st.sunIlluminated]}>
-                      <SunIcon color={isIlluminated ? "#060B1A" : "#D4AF37"} />
-                    </View>
-                    <Text style={[st.actNum, isIlluminated && { color: '#D4AF37', fontWeight: '800' }]}>
-                      {isIlluminated ? "SHINE" : currentTrack.likes}
-                    </Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={st.actBtn} onPress={() => setShowComments(!showComments)}>
-                    <View style={[st.iconContainer, showComments && st.sunIlluminated]}><MsgBubbleIcon color={showComments ? "#060B1A" : "#D4AF37"} /></View>
-                    <Text style={st.actNum}>{commentsList[currentTrack.id].length + currentTrack.comments}</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={st.actBtn} onPress={() => { setIsSaved(!isSaved); triggerNotification(isSaved ? "??? REMOVED FROM SOVEREIGN VAULT" : "??? LEDGER INDEXED TO SOVEREIGN VAULT"); }}>
-                    <View style={[st.iconContainer, isSaved && st.sunIlluminated]}><VaultIcon color={isSaved ? "#060B1A" : "#D4AF37"} /></View>
-                    <Text style={st.actNum}>{isSaved ? "SAVED" : "Save"}</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={st.actBtn} onPress={() => triggerNotification("?? P2P MESH BROADCAST TRANSMITTED")}>
-                    <View style={st.iconContainer}><AntennaIcon /></View>
-                    <Text style={st.actNum}>Share</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={st.mediaContainer} style={st.metaDataDeck}>
-                  <Text style={st.handleTxt}>{currentTrack.creator}</Text>
-                  <Text style={st.bodyTxt}>{currentTrack.title} - {currentTrack.desc}</Text>
-                  <Text style={st.tagTxt}>{currentTrack.tags}</Text>
-                </View>
-              </View>
-            )}
-
-            {currentTab === 'FRIENDS' && (
-              <View style={st.subRouterViewWorkspace}>
-                <Text style={st.routerHeaderTitle}>?? SWARM COOPERATIVE</Text>
-                <Text style={st.routerSubText}>Active Node Mesh Tracking Topology</Text>
-                <View style={st.swarmStatusCard}>
-                  <Text style={st.swarmStatusText}>?? Swarm Synchronization Status: <Text style={{color: '#39FF14'}}>OPTIMIZED</Text></Text>
-                  <Text style={st.swarmStatusSubText}>18 Active PicoClaw Nodes Connected on Loop</Text>
-                </View>
-              </View>
-            )}
-
-            {currentTab === 'MESSENGER' && (
-              <View style={st.subRouterViewWorkspace}>
-                <Text style={st.routerHeaderTitle}>?? TERRACARE MESSENGER</Text>
-                <Text style={st.routerSubText}>Encrypted End-to-End Peer Channels</Text>
-                <View style={st.swarmStatusCard}>
-                  <Text style={st.swarmStatusText}>?? Session Security Architecture:</Text>
-                  <Text style={st.swarmStatusSubText}>P2P Mesh Routing Active over Localized Gateway Nodes</Text>
-                </View>
-              </View>
-            )}
-
-            {/* Account Setup View */}
-            {currentTab === 'PROFILE' && (
-              <ScrollView style={st.profileContentScrollDeck} contentContainerStyle={{ paddingBottom: 40 }}>
-                
-                <View style={st.profileHeaderCluster}>
-                  <View style={st.sovereignAvatarCellHex}>
-                    <Text style={st.avatarInitialText}>S</Text>
-                  </View>
-                  <Text style={st.displayHandleText}>@{username}</Text>
-                  <Text style={st.cellNftSerialText}>{cellTokenId} // {networkDomain}</Text>
-                </View>
-
-                <View style={st.profileStatsRowDeck}>
-                  <View style={st.statItemBox}><Text style={st.statVal}>1</Text><Text style={st.statLbl}>Secure Cell</Text></View>
-                  <View style={st.statItemBox}><Text style={st.statVal}>18</Text><Text style={st.statLbl}>Swarm Nodes</Text></View>
-                  <View style={st.statItemBox}><Text style={st.statVal}>1M</Text><Text style={st.statLbl}>Grid Finite</Text></View>
-                </View>
-
-                <View style={st.formSectionHeaderRow}>
-                  <Text style={st.formSectionTitle}>ACCOUNT PROFILE SETUP</Text>
-                </View>
-
-                <View style={st.inputFormFieldCard}>
-                  <Text style={st.fieldInputLabelText}>Sovereign Username</Text>
-                  <TextInput style={st.profileTextInputNode} value={username} onChangeText={setUsername} />
-                  
-                  <Text style={st.fieldInputLabelText}>Captured Real Legal Name</Text>
-                  <TextInput style={st.profileTextInputNode} value={legalName} onChangeText={setLegalName} />
-
-                  <Text style={st.fieldInputLabelText}>Required Legal Jurisdiction / Location</Text>
-                  <TextInput style={st.profileTextInputNode} value={postalAddress} onChangeText={setPostalAddress} />
-
-                  <Text style={st.fieldInputLabelText}>Biography / Focus</Text>
-                  <TextInput style={[st.profileTextInputNode, { height: 50, paddingTop: 8 }]} multiline value={bioText} onChangeText={setBioText} />
-                </View>
-
-                <TouchableOpacity style={st.commitLedgerBtnNode} onPress={() => triggerNotification("?? PROFILE DETAIL RECORDS UPDATED")}>
-                  <Text style={st.commitLedgerBtnText}>UPDATE SECURE PROFILE DETAILS</Text>
-                </TouchableOpacity>
-
-                {hudMessage && (
-                  <View style={[st.witnessHudOverlay, { bottom: 80, top: undefined }]}>
-                    <Text style={st.hudTitle}>{hudMessage}</Text>
                   </View>
                 )}
+                {subFeed === 'FOLLOWING' && <View style={[StyleSheet.absoluteFill, { backgroundColor: '#060B1A', justifyContent: 'center', alignItems: 'center' }]}><Text style={{ color: '#D4AF37', fontWeight: '800' }}>?? FOLLOWING LAYER SECURED</Text></View>}
+                
+                {/* Complete Unified Marketplace Logic Loop */}
+                {subFeed === 'MARKET' && (
+                  <View style={[StyleSheet.absoluteFill, { backgroundColor: '#060B1A', padding: 16, paddingTop: 64 }]}>
+                    <View style={st.marketSubToggleRow}>
+                      <TouchableOpacity style={[st.marketSubToggleBtn, marketTabContext === 'EXPLORE' && st.marketSubToggleBtnActive]} onPress={() => { setMarketTabContext('EXPLORE'); setSelectedMerchantShop(null); }}>
+                        <Text style={[st.marketSubToggleBtnTxt, marketTabContext === 'EXPLORE' && { color: '#060B1A' }]}>EXPLORE SHOPS</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[st.marketSubToggleBtn, marketTabContext === 'MY_SHOP' && st.marketSubToggleBtnActive]} onPress={() => setMarketTabContext('MY_SHOP')}>
+                        <Text style={[st.marketSubToggleBtnTxt, marketTabContext === 'MY_SHOP' && { color: '#060B1A' }]}>?? MY SHOP</Text>
+                      </TouchableOpacity>
+                    </View>
 
+                    {selectedMerchantShop ? (
+                      <View style={StyleSheet.absoluteFill}>
+                        <View style={st.merchantImmersiveHeaderCard}>
+                          <TouchableOpacity style={st.closeShopImmersiveBtn} onPress={() => setSelectedMerchantShop(null)}>
+                            <Text style={{ color: '#D4AF37', fontWeight: '900', fontSize: 11 }}>? EXIT SHOP</Text>
+                          </TouchableOpacity>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                            <img className="merchant-brand-logo-frame" src={selectedMerchantShop.logoUrl} alt="logo" />
+                            <View>
+                              <Text style={st.immersiveMerchantTitle}>{selectedMerchantShop.shopName}</Text>
+                              <Text style={st.immersiveMerchantStyleLabel}>Owner: {selectedMerchantShop.provider}</Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        <ScrollView style={{ padding: 2, marginTop: 85 }}>
+                          <Text style={st.catalogSectionHeaderTitle}>?? AVAILABLE PRODUCTS & SERVICES ($AUD)</Text>
+                          {selectedMerchantShop.products && selectedMerchantShop.products.map((p, pIdx) => (
+                            <View key={pIdx} style={st.productRowEcomCard}>
+                              <img className="product-thumbnail-frame" src={p.imgUrl} alt="product" />
+                              <View style={{ flex: 1, marginLeft: 12 }}>
+                                <Text style={st.ecomProductNameText}>{p.name}</Text>
+                                <Text style={st.ecomProductPriceText}>${p.priceAud} AUD</Text>
+                              </View>
+                              <TouchableOpacity style={st.checkoutBtnNode} onPress={() => executeSaleWithFee(p.name, p.priceAud)}>
+                                <Text style={st.checkoutBtnTxt}>BUY</Text>
+                              </TouchableOpacity>
+                            </View>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    ) : marketTabContext === 'EXPLORE' ? (
+                      <ScrollView style={{ flex: 1 }}>
+                        {marketplaceServices.map(srv => (
+                          <TouchableOpacity key={srv.id} activeOpacity={0.85} onPress={() => setSelectedMerchantShop(srv)} style={st.botTelemetryCard}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <img className="merchant-brand-logo-frame" src={srv.logoUrl} alt="logo" />
+                              <View style={{ flex: 1 }}>
+                                <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>{srv.shopName}</Text>
+                                <Text style={{ color: '#D4AF37', fontSize: 11, fontFamily: 'monospace' }}>{srv.provider}</Text>
+                              </View>
+                            </View>
+                            <Text style={{ color: '#7E8FA7', fontSize: 11, marginTop: 6 }}>{srv.details}</Text>
+                            <Text style={st.clickToOpenMerchantTextNode}>?? TAP TO SCROLL STORE PRODUCTS</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    ) : (
+                      <ScrollView style={st.shopBuilderContainerDeck}>
+                        <Text style={st.builderLabelText}>Store Brand Name</Text>
+                        <TextInput style={st.builderInputNode} placeholder="Store Title..." placeholderTextColor="rgba(255,255,255,0.2)" value={shopFormName} onChangeText={setShopFormName} />
+                        <Text style={st.builderLabelText}>Brand Logo URL Link</Text>
+                        <TextInput style={st.builderInputNode} placeholder="https://site.com/logo.png" placeholderTextColor="rgba(255,255,255,0.2)" value={shopFormLogoUrl} onChangeText={setShopFormLogoUrl} />
+                        <Text style={st.builderLabelText}>Store Focus Description</Text>
+                        <TextInput style={[st.builderInputNode, { height: 40 }]} multiline value={shopFormDetails} onChangeText={setShopFormDetails} />
+                        
+                        <View style={st.subProductEntryBoxSection}>
+                          <Text style={st.productSectionHeaderSubText}>?? INITIAL PRODUCT INVENTORY ($AUD)</Text>
+                          <TextInput style={st.builderInputNode} placeholder="Item Name" placeholderTextColor="rgba(255,255,255,0.2)" value={prodFormName} onChangeText={setProdFormName} />
+                          <TextInput style={st.builderInputNode} placeholder="Price in AU Dollars" placeholderTextColor="rgba(255,255,255,0.2)" value={prodFormPriceAud} onChangeText={setProdFormPriceAud} keyboardType="numeric" />
+                          <TextInput style={st.builderInputNode} placeholder="Product Thumbnail URL Link" placeholderTextColor="rgba(255,255,255,0.2)" value={prodFormImgUrl} onChangeText={setProdFormImgUrl} />
+                        </View>
+
+                        <TouchableOpacity style={st.launchShopBtnNode} onPress={() => {
+                          if (!shopFormName.trim()) return;
+                          const newShop = {
+                            id: `s_${Date.now()}`, provider: '@sovereign', shopName: shopFormName,
+                            logoUrl: shopFormLogoUrl.trim() || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+                            details: shopFormDetails,
+                            products: prodFormName.trim() ? [{ name: prodFormName, priceAud: prodFormPriceAud || '0.00', imgUrl: prodFormImgUrl || 'https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?w=150' }] : []
+                          };
+                          setMarketplaceServices([newShop, ...marketplaceServices]);
+                          setMarketTabContext('EXPLORE');
+                          triggerNotification("?? UNIQUE AUD SHOP DISPATCHED TO LEDGER");
+                        }}>
+                          <Text style={st.launchShopBtnText}>LAUNCH UNIQUE E-COMMERCE STORE</Text>
+                        </TouchableOpacity>
+                      </ScrollView>
+                    )}
+                  </View>
+                )}
+              </View>
+            )}
+
+            {currentTab === 'SWARM' && (
+              <ScrollView style={st.fallbackTabPanelBody}>
+                <Text style={st.panelSectionHeader}>?? ACTIVE SWARM INSTANCES</Text>
+                <View style={st.solidDataCard}>
+                  <Text style={st.dataCardMeta}>NODE_ID: #0018-PI-CLAW</Text>
+                  <Text style={st.dataCardBody}>Status: SYNCED // Fleet Allocation: 18 Active Devices.</Text>
+                </View>
+                <View style={st.solidDataCard}>
+                  <Text style={st.dataCardMeta}>MESH NETWORK PATHS</Text>
+                  <Text style={st.dataCardBody}>P2P Mesh synchronization parameters verified via local server gateway.</Text>
+                </View>
               </ScrollView>
             )}
 
+            {currentTab === 'MESSENGER' && (
+              <ScrollView style={st.fallbackTabPanelBody}>
+                <Text style={st.panelSectionHeader}>?? SECURE P2P MESH INTERFACE</Text>
+                <View style={st.solidDataCard}>
+                  <Text style={st.dataCardMeta}>@oriana_peace</Text>
+                  <Text style={st.dataCardBody}>Resonance frequency mapping parameters locked on ledger.</Text>
+                </View>
+              </ScrollView>
+            )}
+
+            {currentTab === 'PROFILE' && (
+              <ScrollView style={st.fallbackTabPanelBody}>
+                <Text style={st.panelSectionHeader}>?? IDENTITY META DECK</Text>
+                <View style={st.solidDataCard}>
+                  <Text style={st.dataCardMeta}>PEACE ARCHITECT CONTEXT</Text>
+                  <Text style={st.dataCardBody}>Role: Peace Architect</Text>
+                  <Text style={st.dataCardBody}>Focus: Conscious Framings & Hollow Hive System Structures.</Text>
+                </View>
+              </ScrollView>
+            )}
           </View>
 
-          {/* Core Bottom Navigation Tray */}
+          {/* Symmetrical 5-Node Bottom Bar System */}
           <View style={st.bottomNavTray}>
-            <TouchableOpacity style={st.navBtnNode} onPress={() => setCurrentTab('HIVE')}>
-              <HiveTriangularCluster color={currentTab === 'HIVE' ? '#D4AF37' : '#7E8FA7'} />
-              <Text style={[st.lblIn, currentTab === 'HIVE' && st.lblAct]}>Hive</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={st.navBtnNode} onPress={() => setCurrentTab('FRIENDS')}>
-              <SharpBeeIcon color={currentTab === 'FRIENDS' ? '#D4AF37' : '#7E8FA7'} />
-              <Text style={[st.lblIn, currentTab === 'FRIENDS' && st.lblAct]}>Friends</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={st.navBtnNode} onPress={() => triggerNotification("? WITNESS SIGNATURE BROADCAST GENERATED")}>
-              <View style={st.centerUploadBtn}>
-                <Text style={st.plusSign}>+</Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={st.navBtnNode} onPress={() => setCurrentTab('MESSENGER')}>
-              <MessengerInboxIcon color={currentTab === 'MESSENGER' ? '#D4AF37' : '#7E8FA7'} />
-              <Text style={[st.lblIn, currentTab === 'MESSENGER' && st.lblAct]}>Messenger</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={st.navBtnNode} onPress={() => setCurrentTab('PROFILE')}>
-              <NativeProfileIcon color={currentTab === 'PROFILE' ? '#D4AF37' : '#7E8FA7'} />
-              <Text style={[st.lblIn, currentTab === 'PROFILE' && st.lblAct]}>Profile</Text>
-            </TouchableOpacity>
+            <TouchableOpacity style={st.navBtnNode} onPress={() => { setCurrentTab('HIVE'); setSubFeed('FOR_YOU'); }}><HiveTriangularCluster color={currentTab === 'HIVE' ? '#D4AF37' : '#7E8FA7'} /><Text style={[st.lblIn, currentTab === 'HIVE' && st.lblAct]}>Hive</Text></TouchableOpacity>
+            <TouchableOpacity style={st.navBtnNode} onPress={() => setCurrentTab('SWARM')}><TrueHollowBeeIcon color={currentTab === 'SWARM' ? '#D4AF37' : '#7E8FA7'} /><Text style={[st.lblIn, currentTab === 'SWARM' && st.lblAct]}>Swarm</Text></TouchableOpacity>
+            <TouchableOpacity style={st.navCenterPlusNodeActionBtn} onPress={() => triggerNotification("?? BROADCAST: ACTIVE ESCROW PIPELINE OPENED")}><View style={st.centerPlusCircleCore}><PlusIcon /></View></TouchableOpacity>
+            <TouchableOpacity style={st.navBtnNode} onPress={() => setCurrentTab('MESSENGER')}><MessengerInboxIcon color={currentTab === 'MESSENGER' ? '#D4AF37' : '#7E8FA7'} /><Text style={[st.lblIn, currentTab === 'MESSENGER' && st.lblAct]}>Messenger</Text></TouchableOpacity>
+            <TouchableOpacity style={st.navBtnNode} onPress={() => setCurrentTab('PROFILE')}><NativeProfileIcon color={currentTab === 'PROFILE' ? '#D4AF37' : '#7E8FA7'} /><Text style={[st.lblIn, currentTab === 'PROFILE' && st.lblAct]}>Profile</Text></TouchableOpacity>
           </View>
-        </View>
+          
+          {/* Immersive AR Tasks Sheet */}
+          {arModalActive && (
+            <View style={st.arOverlayImmersiveContainerDeck}>
+              <View style={st.arOverlayHeaderBannerBlock}>
+                <Text style={st.arOverlayHeaderTitle}>???? AR FAUNA REWARDS TASKS</Text>
+                <TouchableOpacity style={st.arOverlayCloseTextBtn} onPress={() => setArModalActive(false)}>
+                  <Text style={{ color: '#060B1A', fontWeight: '900', fontSize: 11 }}>? CLOSE WINDOW</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={st.arPointsWalletTickerStrip}>
+                <Text style={{ color: '#7E8FA7', fontSize: 10, fontWeight: '700' }}>TOTAL NATIVE GAME INCENTIVES COLLECTED</Text>
+                <Text style={{ color: '#39FF14', fontSize: 20, fontWeight: '900', fontFamily: 'monospace', marginTop: 2 }}>{totalWalletPoints} CREDITS</Text>
+              </View>
+              <ScrollView style={{ flex: 1, padding: 4 }}>
+                {faunaTasksList.map(task => (
+                  <View key={task.id} style={[st.productRowEcomCard, task.tagged && { borderColor: '#39FF14' }]}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>{task.animal}</Text>
+                      <Text style={{ color: '#39FF14', fontSize: 11, fontWeight: '700', marginTop: 2 }}>+{task.points} Task Credits</Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={[st.checkoutBtnNode, task.tagged && { backgroundColor: '#060B1A', borderColor: '#39FF14', borderWidth: 1 }]}
+                      onPress={() => handleFaunaTag(task.id, task.animal, task.points)}
+                      disabled={task.tagged}
+                    >
+                      <Text style={[st.checkoutBtnTxt, task.tagged && { color: '#39FF14' }]}>{task.tagged ? 'TAGGED' : 'TAG FAUNA'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
+          {hudMessage && <View style={st.witnessHudOverlay}><Text style={st.hudTitle}>{hudMessage}</Text></View>}
+        </View>
       </View>
     </View>
   );
 }
 
 const st = StyleSheet.create({
-  splash: { backgroundColor: '#0A1128', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', zIndex: 9999 },
-  sunWrap: { justifyContent: 'center', alignItems: 'center', height: 150, width: 150 },
-  sun: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#D4AF37' },
-  brand: { position: 'absolute', bottom: 60, alignItems: 'center', width: '100%' },
-  h1: { fontSize: 36, fontWeight: '900', color: '#D4AF37', letterSpacing: 8, marginBottom: 4 },
-  sub: { fontSize: 10, color: '#93B1E6', letterSpacing: 2, marginBottom: 20 },
-  badge: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, backgroundColor: '#060B1A', borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.25)' },
-  badgeTxt: { fontSize: 11, color: '#D4AF37', fontStyle: 'italic' },
-  outerCanvas: { backgroundColor: '#060B1A', width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 },
+  outerCanvas: { backgroundColor: '#060B1A', width: '100vw', height: '100vh', position: 'fixed', top: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   deviceDisplay: { width: '420px', height: '840px', backgroundColor: '#D4AF37', position: 'relative', overflow: 'hidden', borderRadius: 40, borderWidth: 2, borderColor: '#1E293B', display: 'flex', flexDirection: 'column' },
   unifiedGoldFrameOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 30, pointerEvents: 'none' },
   innerContentSpace: { position: 'absolute', top: '24px', bottom: '24px', left: '24px', right: '24px', backgroundColor: '#060B1A', borderRadius: 24, display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 40 },
-  header: { position: 'absolute', top: 16, left: 16, right: 16, height: 40, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
-  tabIn: { color: 'rgba(255, 255, 255, 0.6)', fontSize: 14, fontWeight: '600', marginHorizontal: 12 },
-  tabAct: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginHorizontal: 12, borderBottomWidth: 2, borderBottomColor: '#D4AF37', paddingBottom: 2 },
-  card: { flex: 1, justifyContent: 'flex-end', position: 'relative' },
-  mediaContainer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#070E22', zIndex: 11 },
-  videoOverlayNavGate: { position: 'absolute', top: 60, left: 0, right: 0, alignItems: 'center', zIndex: 20 },
-  nextBtn: { paddingHorizontal: 14, paddingVertical: 6, backgroundColor: 'rgba(6, 11, 26, 0.8)', borderWidth: 1, borderColor: '#D4AF37', borderRadius: 6 },
-  nextTxt: { color: '#D4AF37', fontSize: 11, fontWeight: '700' },
+  header: { position: 'absolute', top: 12, left: 12, right: 12, height: 44, flexDirection: 'row', alignItems: 'center', zIndex: 100, backgroundColor: 'rgba(6, 11, 26, 0.85)', borderRadius: 12, paddingLeft: 8 },
+  arOverlayTriggerTextBtn: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0A1128', borderRadius: 6, borderWidth: 1, borderColor: '#D4AF37', marginRight: 4 },
+  arBtnInlineTxt: { color: '#D4AF37', fontSize: 11, fontWeight: '900', fontFamily: 'monospace' },
+  centerTabsWrapperFrame: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  headerTabTouch: { flex: 1, alignItems: 'center', justifyContent: 'center', height: '100%' },
+  tabIn: { color: 'rgba(255, 255, 255, 0.35)', fontSize: 13, fontWeight: '600' },
+  tabAct: { color: '#D4AF37', fontSize: 13, fontWeight: '800', borderBottomWidth: 2, borderBottomColor: '#D4AF37', paddingBottom: 2 },
   leftActionsRail: { position: 'absolute', bottom: 90, left: 12, alignItems: 'center', zIndex: 40 },
-  actBtn: { alignItems: 'center', marginVertical: 6 },
-  iconContainer: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(10, 17, 40, 0.85)', borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
-  sunIlluminated: { backgroundColor: '#D4AF37', borderColor: '#FFFFFF' },
-  actNum: { color: '#FFFFFF', fontSize: 9, fontWeight: '600', textAlign: 'center' },
-  metaDataDeck: { position: 'absolute', bottom: 80, left: 64, right: 12, zIndex: 40, backgroundColor: 'rgba(6, 11, 26, 0.75)', padding: 8, borderRadius: 8, borderWidth: 0.5, borderColor: 'rgba(212, 175, 55, 0.2)' },
-  handleTxt: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  bodyTxt: { color: '#E2E8F0', fontSize: 12, marginBottom: 2 },
-  tagTxt: { color: '#D4AF37', fontSize: 12, fontWeight: '600' },
+  actBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(10, 17, 40, 0.85)', borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)', alignItems: 'center', justifyContent: 'center', marginVertical: 6 },
+  metaDataDeck: { position: 'absolute', bottom: 80, left: 64, right: 12, zIndex: 40, backgroundColor: 'rgba(6, 11, 26, 0.8)', padding: 10, borderRadius: 10 },
+  handleTxt: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  bodyTxt: { color: '#E2E8F0', fontSize: 11 },
   bottomNavTray: { height: 60, backgroundColor: '#0A1128', borderTopWidth: 1, borderColor: 'rgba(212, 175, 55, 0.15)', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', zIndex: 200 },
-  navBtnNode: { alignItems: 'center', justifyContent: 'center', width: 65 },
-  lblAct: { fontSize: 9, color: '#D4AF37', fontWeight: '700', marginTop: 1 },
-  lblIn: { fontSize: 9, color: '#7E8FA7', fontWeight: '500', marginTop: 1 },
-  centerUploadBtn: { width: 32, height: 22, backgroundColor: '#D4AF37', borderRadius: 5, justifyContent: 'center', alignItems: 'center' },
-  plusSign: { color: '#0A1128', fontSize: 14, fontWeight: '900' },
-  witnessHudOverlay: { position: 'absolute', top: '40%', left: '10%', right: '10%', backgroundColor: 'rgba(6, 11, 26, 0.95)', borderWidth: 1, borderColor: '#D4AF37', borderRadius: 8, padding: 10, zIndex: 150 },
-  hudTitle: { color: '#D4AF37', fontSize: 11, fontWeight: '900', letterSpacing: 1, textAlign: 'center' },
+  navBtnNode: { alignItems: 'center', justifyContent: 'center', width: 65, height: '100%' },
+  navCenterPlusNodeActionBtn: { width: 50, height: '100%', justifyContent: 'center', alignItems: 'center' },
+  centerPlusCircleCore: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#D4AF37', justifyContent: 'center', alignItems: 'center' },
+  lblAct: { fontSize: 9, color: '#D4AF37', fontWeight: '700', marginTop: 3 },
+  lblIn: { fontSize: 9, color: '#7E8FA7', fontWeight: '500', marginTop: 3 },
+  iconSvgFix: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  arOverlayImmersiveContainerDeck: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: '#060B1A', zIndex: 400, padding: 16, paddingTop: 32 },
+  witnessHudOverlay: { position: 'absolute', top: '40%', left: '10%', right: '10%', backgroundColor: 'rgba(6, 11, 26, 0.95)', borderWidth: 1, borderColor: '#D4AF37', borderRadius: 8, padding: 10, zIndex: 250 },
+  hudTitle: { color: '#D4AF37', fontSize: 10, fontWeight: '900', textAlign: 'center' },
+  marketSubToggleRow: { flexDirection: 'row', backgroundColor: '#0A1128', padding: 4, borderRadius: 8, marginBottom: 10 },
+  marketSubToggleBtn: { flex: 1, height: 28, justifyContent: 'center', alignItems: 'center', borderRadius: 6 },
+  marketSubToggleBtnActive: { backgroundColor: '#D4AF37' },
+  marketSubToggleBtnTxt: { color: '#7E8FA7', fontSize: 10, fontWeight: '900', fontFamily: 'monospace' },
+  botTelemetryCard: { backgroundColor: '#0A1128', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#D4AF37', marginBottom: 8 },
+  clickToOpenMerchantTextNode: { color: '#D4AF37', fontSize: 9, fontWeight: '800', marginTop: 8, textTransform: 'uppercase' },
+  shopBuilderContainerDeck: { flex: 1, backgroundColor: '#0A1128', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.15)' },
+  builderLabelText: { color: '#7E8FA7', fontSize: 9, fontWeight: '700', marginBottom: 2, textTransform: 'uppercase', marginTop: 4 },
+  builderInputNode: { height: 30, backgroundColor: '#060B1A', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.12)', color: '#FFFFFF', fontSize: 11, paddingHorizontal: 10, marginBottom: 8 },
+  launchShopBtnNode: { height: 34, backgroundColor: '#D4AF37', borderRadius: 6, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
+  launchShopBtnText: { color: '#060B1A', fontSize: 10, fontWeight: '900' },
+  merchantImmersiveHeaderCard: { position: 'absolute', top: 0, left: 0, right: 0, height: 75, padding: 12, backgroundColor: '#0A1128', borderBottomWidth: 1, borderColor: '#D4AF37', zIndex: 130 },
+  closeShopImmersiveBtn: { position: 'absolute', right: 12, top: 12, backgroundColor: '#060B1A', borderWidth: 0.5, borderColor: '#D4AF37', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+  immersiveMerchantTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  immersiveMerchantStyleLabel: { color: '#7E8FA7', fontSize: 10, fontFamily: 'monospace' },
+  catalogSectionHeaderTitle: { color: '#D4AF37', fontSize: 11, fontWeight: '900', marginVertical: 8, letterSpacing: 0.5 },
+  productRowEcomCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0A1128', padding: 10, borderRadius: 8, marginBottom: 6, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.03)' },
+  ecomProductNameText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  ecomProductPriceText: { color: '#39FF14', fontSize: 11, fontWeight: '800', marginTop: 2, fontFamily: 'monospace' },
+  checkoutBtnNode: { backgroundColor: '#D4AF37', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4 },
+  checkoutBtnTxt: { color: '#060B1A', fontSize: 10, fontWeight: '900' },
+  subProductEntryBoxSection: { backgroundColor: '#060B1A', padding: 10, borderRadius: 6, borderLeftWidth: 2, borderLeftColor: '#D4AF37', marginVertical: 8 },
+  productSectionHeaderSubText: { color: '#D4AF37', fontSize: 9, fontWeight: '800', marginBottom: 6, fontFamily: 'monospace' },
   
-  subRouterViewWorkspace: { flex: 1, backgroundColor: '#060B1A', padding: 24, paddingTop: 80 },
-  routerHeaderTitle: { color: '#D4AF37', fontSize: 20, fontWeight: '900', letterSpacing: 1, marginBottom: 4 },
-  routerSubText: { color: '#7E8FA7', fontSize: 12, marginBottom: 20 },
-  swarmStatusCard: { backgroundColor: '#0A1128', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.15)' },
-  swarmStatusText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700', marginBottom: 6 },
-  swarmStatusSubText: { color: '#7E8FA7', fontSize: 11, fontFamily: 'monospace' },
-
-  commentsOverlayTray: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '65%', backgroundColor: 'rgba(6, 11, 26, 0.98)', borderTopWidth: 1, borderColor: '#D4AF37', zIndex: 120, padding: 16, display: 'flex', flexDirection: 'column' },
-  commentHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  commentTitleText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
-  closeTrayBtn: { padding: 4 },
-  commentsScrollDeck: { flex: 1, marginBottom: 12 },
-  fallbackComment: { color: '#7E8FA7', fontSize: 11, marginBottom: 8, fontStyle: 'italic' },
-  userCommentText: { color: '#E2E8F0', fontSize: 12, marginBottom: 8, backgroundColor: 'rgba(255,255,255,0.03)', padding: 6, borderRadius: 6 },
-  commentInputRow: { flexDirection: 'row', alignItems: 'center' },
-  hudInputField: { flex: 1, height: 36, backgroundColor: '#0A1128', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)', color: '#FFFFFF', fontSize: 12, paddingHorizontal: 10, marginRight: 8 },
-  sendCommentBtn: { height: 36, paddingHorizontal: 16, backgroundColor: '#D4AF37', borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
-
-  profileContentScrollDeck: { flex: 1, backgroundColor: '#060B1A', paddingTop: 60, paddingHorizontal: 20 },
-  profileHeaderCluster: { alignItems: 'center', marginBottom: 20 },
-  sovereignAvatarCellHex: { width: 66, height: 66, borderRadius: 33, backgroundColor: '#0A1128', borderWidth: 2, borderColor: '#D4AF37', justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  avatarInitialText: { color: '#D4AF37', fontSize: 24, fontWeight: '900' },
-  displayHandleText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', letterSpacing: 0.5 },
-  cellNftSerialText: { color: '#7E8FA7', fontSize: 10, fontFamily: 'monospace', marginTop: 4 },
-  profileStatsRowDeck: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  statItemBox: { alignItems: 'center', width: 90 },
-  statVal: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
-  statLbl: { color: '#7E8FA7', fontSize: 10, marginTop: 2 },
-  formSectionHeaderRow: { borderBottomWidth: 1, borderBottomColor: 'rgba(212, 175, 55, 0.15)', paddingBottom: 4, marginBottom: 10, marginTop: 12 },
-  formSectionTitle: { color: '#D4AF37', fontSize: 11, fontWeight: '900', letterSpacing: 1.5 },
-  inputFormFieldCard: { backgroundColor: '#0A1128', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.05)', marginBottom: 14 },
-  fieldInputLabelText: { color: '#7E8FA7', fontSize: 9, fontWeight: '600', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
-  profileTextInputNode: { height: 32, backgroundColor: '#060B1A', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.15)', color: '#FFFFFF', fontSize: 12, paddingHorizontal: 10, marginBottom: 12 },
-  commitLedgerBtnNode: { height: 38, backgroundColor: '#D4AF37', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginTop: 4, marginBottom: 20 },
-  commitLedgerBtnText: { color: '#060B1A', fontSize: 11, fontWeight: '900', letterSpacing: 1 }
+  fallbackTabPanelBody: { flex: 1, backgroundColor: '#060B1A', padding: 16, paddingTop: 64 },
+  panelSectionHeader: { color: '#D4AF37', fontSize: 14, fontWeight: '900', marginBottom: 16, fontFamily: 'monospace' },
+  solidDataCard: { backgroundColor: '#0A1128', borderRadius: 8, padding: 12, marginBottom: 10, borderWidth: 0.5, borderColor: 'rgba(212,175,55,0.2)' },
+  dataCardMeta: { color: '#D4AF37', fontSize: 11, fontWeight: '800', fontFamily: 'monospace', marginBottom: 4 },
+  dataCardBody: { color: '#E2E8F0', fontSize: 12, lineHeight: 16 },
+  arOverlayHeaderBannerBlock: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderColor: '#D4AF37', paddingBottom: 10, marginBottom: 12 },
+  arOverlayHeaderTitle: { color: '#D4AF37', fontSize: 14, fontWeight: '900', fontFamily: 'monospace' },
+  arOverlayCloseTextBtn: { backgroundColor: '#D4AF37', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4 },
+  arPointsWalletTickerStrip: { backgroundColor: '#0A1128', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#39FF14', marginBottom: 12 }
 });
 
 AppRegistry.registerComponent('main', () => App);

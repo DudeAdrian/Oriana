@@ -1,0 +1,1 @@
+import { LedgerWitness } from './LedgerWitness'; import { LiquidInfrastructure } from './LiquidInfrastructure'; import { P2PBridge } from './P2PBridge'; export const LedgerBridge = { processSale: (from, to, amount) => { const calc = LiquidInfrastructure.calculateNet(amount); LedgerWitness.recordTransaction(from, to, calc.net); return calc; } };
